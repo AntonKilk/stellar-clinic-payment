@@ -3,11 +3,11 @@ FROM eclipse-temurin:17-jdk-alpine AS builder
 
 WORKDIR /workspace
 
-COPY gradlew .
-COPY gradle/ gradle/
-COPY build.gradle .
-COPY settings.gradle .
-COPY src/ src/
+COPY customer-service/gradlew .
+COPY customer-service/gradle/ gradle/
+COPY customer-service/build.gradle .
+COPY customer-service/settings.gradle .
+COPY customer-service/src/ src/
 
 RUN chmod +x gradlew \
     && ./gradlew bootJar --no-daemon -q

@@ -1,0 +1,176 @@
+{
+  "id": "stellar",
+  "realm": "stellar",
+  "displayName": "Stellar",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "Administrator role",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "MANAGER",
+        "description": "Manager role",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "TEACHER",
+        "description": "Teacher role",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "INTERN",
+        "description": "Intern role",
+        "composite": false,
+        "clientRole": false
+      }
+    ]
+  },
+  "groups": [
+    {
+      "name": "admins",
+      "path": "/admins",
+      "realmRoles": ["ADMIN"],
+      "subGroups": []
+    },
+    {
+      "name": "managers",
+      "path": "/managers",
+      "realmRoles": ["MANAGER"],
+      "subGroups": []
+    },
+    {
+      "name": "teachers",
+      "path": "/teachers",
+      "realmRoles": ["TEACHER"],
+      "subGroups": []
+    },
+    {
+      "name": "interns",
+      "path": "/interns",
+      "realmRoles": ["INTERN"],
+      "subGroups": []
+    }
+  ],
+  "users": [
+    {
+      "username": "admin-user",
+      "email": "admin@stellar.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin-user",
+          "temporary": false
+        }
+      ],
+      "groups": ["/admins"]
+    },
+    {
+      "username": "manager-user",
+      "email": "manager@stellar.com",
+      "firstName": "Manager",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "manager-user",
+          "temporary": false
+        }
+      ],
+      "groups": ["/managers"]
+    },
+    {
+      "username": "teacher-user",
+      "email": "teacher@stellar.com",
+      "firstName": "Teacher",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "teacher-user",
+          "temporary": false
+        }
+      ],
+      "groups": ["/teachers"]
+    },
+    {
+      "username": "intern-user",
+      "email": "intern@stellar.com",
+      "firstName": "Intern",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "intern-user",
+          "temporary": false
+        }
+      ],
+      "groups": ["/interns"]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "stellar-clinic",
+      "name": "Stellar Clinic",
+      "description": "Public OAuth2 client for Stellar Clinic services",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:8443/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "http://localhost:8443"
+      ],
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles"
+      ],
+      "protocolMappers": [
+        {
+          "name": "realm roles mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ]
+}

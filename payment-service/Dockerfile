@@ -3,11 +3,11 @@ FROM eclipse-temurin:17-jdk-alpine AS builder
 
 WORKDIR /workspace
 
-COPY gradlew .
-COPY gradle/ gradle/
-COPY build.gradle .
-COPY settings.gradle .
-COPY src/ src/
+COPY payment-service/gradlew .
+COPY payment-service/gradle/ gradle/
+COPY payment-service/build.gradle .
+COPY payment-service/settings.gradle .
+COPY payment-service/src/ src/
 
 RUN chmod +x gradlew \
     && ./gradlew bootJar --no-daemon -q
@@ -23,11 +23,8 @@ COPY --from=builder /workspace/build/libs/*.jar app.jar
 
 USER appuser
 
-# HTTP (non-TLS)
 EXPOSE 8080
-# HTTPS (TLS)
 EXPOSE 8443
-# JDWP remote debug
 EXPOSE 5005
 
 ENTRYPOINT ["java", \
