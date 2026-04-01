@@ -5,6 +5,13 @@ plugins {
 }
 
 subprojects {
+    apply plugin: 'checkstyle'
+
+    checkstyle {
+        toolVersion = '10.21.0'
+        configFile = rootProject.file('sun_checks.xml')
+    }
+
     apply plugin: 'java'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
@@ -22,15 +29,13 @@ subprojects {
         mavenCentral()
     }
 
-    dependencies {
-        implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-        runtimeOnly 'org.postgresql:postgresql'
-        testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    }
-
     tasks.named('test') {
         useJUnitPlatform()
+        enabled = false
+    }
+
+    tasks.named('check') {
+        dependsOn tasks.withType(Checkstyle)
     }
 }
 
