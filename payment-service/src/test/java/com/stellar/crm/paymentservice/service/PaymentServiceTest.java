@@ -27,6 +27,10 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class PaymentServiceTest {
+    private static final int PAGE_SIZE_DEFAULT = 10;
+    private static final int PAGE_SIZE_MEDIUM = 25;
+    private static final int TOTAL_ELEMENTS = 100;
+    private static final int SECONDS_AGO = 60;
 
     @Mock
     private PaymentRepository paymentRepository;
@@ -37,7 +41,7 @@ public class PaymentServiceTest {
     @Test
     void shouldReturnPagedAndFilteredResult() {
         PaymentFilter filter = new PaymentFilter(null, null, PaymentStatus.RECEIVED, null, null);
-        PageRequest pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
+        PageRequest pageable = PageRequest.of(0, PAGE_SIZE_DEFAULT, Sort.by("createdAt").descending());
         List<Payment> payments = List.of(
                 buildPayment(PaymentStatus.RECEIVED),
                 buildPayment(PaymentStatus.RECEIVED)
@@ -59,7 +63,7 @@ public class PaymentServiceTest {
     @Test
     void shouldReturnEmptyPageWhenNoMatch() {
         PaymentFilter filter = new PaymentFilter(null, null, PaymentStatus.DECLINED, null, null);
-        PageRequest pageable = PageRequest.of(0, 10);
+        PageRequest pageable = PageRequest.of(0, PAGE_SIZE_DEFAULT);
         Page<Payment> emptyPage = new PageImpl<>(List.of(), pageable, 0);
 
         when(paymentRepository.findAll(
@@ -76,12 +80,12 @@ public class PaymentServiceTest {
     @Test
     void shouldRespectPageSize() {
         PaymentFilter filter = new PaymentFilter(null, null, null, null, null);
-        PageRequest pageable = PageRequest.of(0, 25);
+        PageRequest pageable = PageRequest.of(0, PAGE_SIZE_MEDIUM);
         List<Payment> payments = List.of(
                 buildPayment(PaymentStatus.RECEIVED),
                 buildPayment(PaymentStatus.PENDING)
         );
-        Page<Payment> paymentsPage = new PageImpl<>(payments, pageable, 100);
+        Page<Payment> paymentsPage = new PageImpl<>(payments, pageable, TOTAL_ELEMENTS);
 
         when(paymentRepository.findAll(
                 ArgumentMatchers.<Specification<Payment>>any(),
@@ -90,17 +94,17 @@ public class PaymentServiceTest {
 
         final Page<PaymentResponse> result = paymentService.findAll(filter, pageable);
 
-        assertThat(result.getTotalElements()).isEqualTo(100);
+        assertThat(result.getTotalElements()).isEqualTo(TOTAL_ELEMENTS);
         assertThat(result.getContent()).hasSize(2);
-        assertThat(result.getPageable().getPageSize()).isEqualTo(25);
+        assertThat(result.getPageable().getPageSize()).isEqualTo(PAGE_SIZE_MEDIUM);
     }
 
     @Test
     void shouldSortByCreatedAtDescending() {
-        Instant older = Instant.now().minusSeconds(60);
+        Instant older = Instant.now().minusSeconds(SECONDS_AGO);
         Instant newer = Instant.now();
         PaymentFilter filter = new PaymentFilter(null, null, null, null, null);
-        PageRequest pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
+        PageRequest pageable = PageRequest.of(0, PAGE_SIZE_DEFAULT, Sort.by("createdAt").descending());
 
         Payment olderPayment = buildPayment(PaymentStatus.RECEIVED);
         olderPayment.setCreatedAt(older);
