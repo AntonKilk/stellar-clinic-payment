@@ -31,7 +31,6 @@ subprojects {
 
     tasks.named('test') {
         useJUnitPlatform()
-        enabled = false
     }
 
     tasks.named('check') {
