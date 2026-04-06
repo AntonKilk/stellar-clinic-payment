@@ -5,6 +5,7 @@ import com.stellar.crm.paymentservice.model.Payment;
 import com.stellar.crm.paymentservice.model.PaymentStatus;
 import com.stellar.crm.paymentservice.repository.PaymentFilter;
 import com.stellar.crm.paymentservice.repository.PaymentRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
@@ -20,9 +21,11 @@ import org.springframework.data.jpa.domain.Specification;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,6 +40,27 @@ public class PaymentServiceTest {
 
     @InjectMocks
     private PaymentService paymentService;
+
+    @Test
+    void shouldReturnPaymentById() {
+        final Payment payment = buildPayment(PaymentStatus.RECEIVED);
+        when(paymentRepository.findById(payment.getId())).thenReturn(Optional.of(payment));
+
+        final PaymentResponse result = paymentService.findById(payment.getId());
+
+        assertThat(result.id()).isEqualTo(payment.getId());
+        assertThat(result.status()).isEqualTo(PaymentStatus.RECEIVED);
+    }
+
+    @Test
+    void shouldThrowNotFound() {
+        final UUID id = UUID.randomUUID();
+        when(paymentRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> paymentService.findById(id))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining(id.toString());
+    }
 
     @Test
     void shouldReturnPagedAndFilteredResult() {
