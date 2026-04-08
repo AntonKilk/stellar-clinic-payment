@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${INQUIRY_POSTGRES_PORT}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -27,7 +27,7 @@ services:
     volumes:
       - ../keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     healthcheck:
-      test: [ "CMD-SHELL", "curl -sf http://localhost/9000/health/ready || exit 1" ]
+      test: [ "CMD-SHELL", "curl -sf http://localhost:9000/health/ready || exit 1" ]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -43,7 +43,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/${KC_REALM}
     ports:
-      - "8080:8080"
+      - "8082:8082"
       - "8443:8443"
       - "5005:5005"
     depends_on:
