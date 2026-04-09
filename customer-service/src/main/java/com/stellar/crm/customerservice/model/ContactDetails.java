@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,9 +26,10 @@ public class ContactDetails {
     private UUID guid;
 
     @Column(nullable = false, updatable = false, length = EMAIL_LENGTH)
+    @Email(message = "Email should be valid")
     private String email;
 
-    @Column(length = PHONE_LENGTH)
+    @Column(name = "phone_number", length = PHONE_LENGTH)
     private String phone;
 
     @Column(nullable = false, updatable = false)
