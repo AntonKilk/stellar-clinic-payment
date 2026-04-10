@@ -26,18 +26,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class GroupRepositoryTest {
 
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16")
-                    .withDatabaseName("inventory_db")
-                    .withUsername("test")
-                    .withPassword("test");
+    private static final int GROUP_LIMIT = 10;
+    private static final int FULL_COUNT = 10;
+    private static final int PARTIAL_COUNT = 5;
+    private static final int PAGE_SIZE = 10;
 
     @Autowired
     private GroupRepository groupRepository;
 
     private Group fullGroup;
     private Group availableGroup;
+
+    @Container
+    static final PostgreSQLContainer<?> POSTGRES =
+            new PostgreSQLContainer<>("postgres:16")
+                    .withDatabaseName("inventory_db")
+                    .withUsername("test")
+                    .withPassword("test");
 
     @DynamicPropertySource
     static void configureProperties(final DynamicPropertyRegistry registry) {
@@ -50,16 +55,16 @@ class GroupRepositoryTest {
     void setUp() {
         groupRepository.deleteAll();
         // full group: currentCount == groupLimit, no available places
-        fullGroup = groupRepository.save(buildGroup(UUID.randomUUID(), 10, 10));
+        fullGroup = groupRepository.save(buildGroup(UUID.randomUUID(), FULL_COUNT, GROUP_LIMIT));
         // available group: currentCount < groupLimit
-        availableGroup = groupRepository.save(buildGroup(UUID.randomUUID(), 5, 10));
+        availableGroup = groupRepository.save(buildGroup(UUID.randomUUID(), PARTIAL_COUNT, GROUP_LIMIT));
     }
 
     @Test
     void shouldReturnGroupMatchingGroupRefId() {
         final Page<Group> result = groupRepository.findAll(
                 GroupSpecification.byFilter(fullGroup.getGroupRefId(), null),
-                PageRequest.of(0, 10)
+                PageRequest.of(0, PAGE_SIZE)
         );
 
         assertThat(result.getTotalElements()).isEqualTo(1);
@@ -70,7 +75,7 @@ class GroupRepositoryTest {
     void shouldNotReturnGroupsWithDifferentGroupRefId() {
         final Page<Group> result = groupRepository.findAll(
                 GroupSpecification.byFilter(fullGroup.getGroupRefId(), null),
-                PageRequest.of(0, 10)
+                PageRequest.of(0, PAGE_SIZE)
         );
 
         assertThat(result.getContent()).noneMatch(g -> g.getGuid().equals(availableGroup.getGuid()));
@@ -80,7 +85,7 @@ class GroupRepositoryTest {
     void shouldReturnAllGroupsWhenGroupRefIdIsNull() {
         final Page<Group> result = groupRepository.findAll(
                 GroupSpecification.byFilter(null, null),
-                PageRequest.of(0, 10)
+                PageRequest.of(0, PAGE_SIZE)
         );
 
         assertThat(result.getTotalElements()).isEqualTo(2);
@@ -90,7 +95,7 @@ class GroupRepositoryTest {
     void shouldReturnEmptyWhenGroupRefIdNotFound() {
         final Page<Group> result = groupRepository.findAll(
                 GroupSpecification.byFilter(UUID.randomUUID(), null),
-                PageRequest.of(0, 10)
+                PageRequest.of(0, PAGE_SIZE)
         );
 
         assertThat(result.getContent()).isEmpty();
@@ -100,7 +105,7 @@ class GroupRepositoryTest {
     void shouldReturnOnlyGroupsWithAvailablePlacesWhenTrue() {
         final Page<Group> result = groupRepository.findAll(
                 GroupSpecification.byFilter(null, true),
-                PageRequest.of(0, 10)
+                PageRequest.of(0, PAGE_SIZE)
         );
 
         assertThat(result.getTotalElements()).isEqualTo(1);
@@ -111,7 +116,7 @@ class GroupRepositoryTest {
     void shouldReturnAllGroupsWhenAvailableIsFalse() {
         final Page<Group> result = groupRepository.findAll(
                 GroupSpecification.byFilter(null, false),
-                PageRequest.of(0, 10)
+                PageRequest.of(0, PAGE_SIZE)
         );
 
         assertThat(result.getTotalElements()).isEqualTo(2);
@@ -121,7 +126,7 @@ class GroupRepositoryTest {
     void shouldReturnAllGroupsWhenAvailableIsNull() {
         final Page<Group> result = groupRepository.findAll(
                 GroupSpecification.byFilter(null, null),
-                PageRequest.of(0, 10)
+                PageRequest.of(0, PAGE_SIZE)
         );
 
         assertThat(result.getTotalElements()).isEqualTo(2);
@@ -131,7 +136,7 @@ class GroupRepositoryTest {
     void shouldFilterByGroupRefIdAndAvailablePlaces() {
         final Page<Group> result = groupRepository.findAll(
                 GroupSpecification.byFilter(availableGroup.getGroupRefId(), true),
-                PageRequest.of(0, 10)
+                PageRequest.of(0, PAGE_SIZE)
         );
 
         assertThat(result.getTotalElements()).isEqualTo(1);
@@ -142,7 +147,7 @@ class GroupRepositoryTest {
     void shouldReturnEmptyWhenGroupRefIdMatchesButNoAvailablePlaces() {
         final Page<Group> result = groupRepository.findAll(
                 GroupSpecification.byFilter(fullGroup.getGroupRefId(), true),
-                PageRequest.of(0, 10)
+                PageRequest.of(0, PAGE_SIZE)
         );
 
         assertThat(result.getContent()).isEmpty();

@@ -30,6 +30,16 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class GroupServiceTest {
 
+    private static final int GROUP_LIMIT = 10;
+    private static final int GROUP_LIMIT_LARGE = 20;
+    private static final int INITIAL_COUNT = 3;
+    private static final int INITIAL_COUNT_AFTER_RESERVE = 4;
+    private static final int PARTIAL_COUNT = 5;
+    private static final int PARTIAL_COUNT_AFTER_RELEASE = 4;
+    private static final int FIND_ALL_COUNT = 2;
+    private static final int FIND_ALL_LIMIT = 5;
+    private static final int PAGE_SIZE = 10;
+
     @Mock
     private GroupRepository groupRepository;
 
@@ -39,20 +49,20 @@ class GroupServiceTest {
     @Test
     void shouldCreateGroupWithCorrectFields() {
         final UUID refId = UUID.randomUUID();
-        final GroupCreateRequest request = new GroupCreateRequest(refId, 20);
+        final GroupCreateRequest request = new GroupCreateRequest(refId, GROUP_LIMIT_LARGE);
         when(groupRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         final GroupResponse response = groupService.createGroup(request);
 
         assertThat(response.groupRefId()).isEqualTo(refId);
-        assertThat(response.groupLimit()).isEqualTo(20);
+        assertThat(response.groupLimit()).isEqualTo(GROUP_LIMIT_LARGE);
         assertThat(response.currentCount()).isZero();
         assertThat(response.guid()).isNotNull();
     }
 
     @Test
     void shouldPersistGroupOnCreate() {
-        final GroupCreateRequest request = new GroupCreateRequest(UUID.randomUUID(), 10);
+        final GroupCreateRequest request = new GroupCreateRequest(UUID.randomUUID(), GROUP_LIMIT);
         when(groupRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         groupService.createGroup(request);
@@ -66,13 +76,13 @@ class GroupServiceTest {
 
     @Test
     void shouldIncrementCurrentCountOnReserve() {
-        final Group group = buildGroup(UUID.randomUUID(), 3, 10);
+        final Group group = buildGroup(UUID.randomUUID(), INITIAL_COUNT, GROUP_LIMIT);
         when(groupRepository.findByGroupRefId(group.getGroupRefId())).thenReturn(Optional.of(group));
         when(groupRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         final GroupResponse response = groupService.reserveSlot(group.getGroupRefId());
 
-        assertThat(response.currentCount()).isEqualTo(4);
+        assertThat(response.currentCount()).isEqualTo(INITIAL_COUNT_AFTER_RESERVE);
     }
 
     @Test
@@ -87,7 +97,7 @@ class GroupServiceTest {
 
     @Test
     void shouldThrowWhenGroupFullOnReserve() {
-        final Group group = buildGroup(UUID.randomUUID(), 10, 10);
+        final Group group = buildGroup(UUID.randomUUID(), GROUP_LIMIT, GROUP_LIMIT);
         when(groupRepository.findByGroupRefId(group.getGroupRefId())).thenReturn(Optional.of(group));
 
         assertThatThrownBy(() -> groupService.reserveSlot(group.getGroupRefId()))
@@ -97,13 +107,13 @@ class GroupServiceTest {
 
     @Test
     void shouldDecrementCurrentCountOnRelease() {
-        final Group group = buildGroup(UUID.randomUUID(), 5, 10);
+        final Group group = buildGroup(UUID.randomUUID(), PARTIAL_COUNT, GROUP_LIMIT);
         when(groupRepository.findByGroupRefId(group.getGroupRefId())).thenReturn(Optional.of(group));
         when(groupRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         final GroupResponse response = groupService.releaseSlot(group.getGroupRefId());
 
-        assertThat(response.currentCount()).isEqualTo(4);
+        assertThat(response.currentCount()).isEqualTo(PARTIAL_COUNT_AFTER_RELEASE);
     }
 
     @Test
@@ -118,7 +128,7 @@ class GroupServiceTest {
 
     @Test
     void shouldThrowWhenCountAlreadyZeroOnRelease() {
-        final Group group = buildGroup(UUID.randomUUID(), 0, 10);
+        final Group group = buildGroup(UUID.randomUUID(), 0, GROUP_LIMIT);
         when(groupRepository.findByGroupRefId(group.getGroupRefId())).thenReturn(Optional.of(group));
 
         assertThatThrownBy(() -> groupService.releaseSlot(group.getGroupRefId()))
@@ -128,16 +138,16 @@ class GroupServiceTest {
 
     @Test
     void shouldReturnMappedPageOnFindAll() {
-        final Group group = buildGroup(UUID.randomUUID(), 2, 5);
+        final Group group = buildGroup(UUID.randomUUID(), FIND_ALL_COUNT, FIND_ALL_LIMIT);
         final Page<Group> page = new PageImpl<>(List.of(group));
         when(groupRepository.findAll(any(Specification.class), any(PageRequest.class))).thenReturn(page);
 
-        final Page<GroupResponse> result = groupService.findAll(null, null, PageRequest.of(0, 10));
+        final Page<GroupResponse> result = groupService.findAll(null, null, PageRequest.of(0, PAGE_SIZE));
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).guid()).isEqualTo(group.getGuid());
-        assertThat(result.getContent().get(0).currentCount()).isEqualTo(2);
-        assertThat(result.getContent().get(0).groupLimit()).isEqualTo(5);
+        assertThat(result.getContent().get(0).currentCount()).isEqualTo(FIND_ALL_COUNT);
+        assertThat(result.getContent().get(0).groupLimit()).isEqualTo(FIND_ALL_LIMIT);
     }
 
     @Test
@@ -145,7 +155,7 @@ class GroupServiceTest {
         when(groupRepository.findAll(any(Specification.class), any(PageRequest.class)))
                 .thenReturn(Page.empty());
 
-        final Page<GroupResponse> result = groupService.findAll(UUID.randomUUID(), true, PageRequest.of(0, 10));
+        final Page<GroupResponse> result = groupService.findAll(UUID.randomUUID(), true, PageRequest.of(0, PAGE_SIZE));
 
         assertThat(result.getContent()).isEmpty();
     }
