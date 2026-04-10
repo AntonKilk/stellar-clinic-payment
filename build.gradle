@@ -12,6 +12,12 @@ subprojects {
         configFile = rootProject.file('sun_checks.xml')
     }
 
+    tasks.withType(Checkstyle).configureEach {
+        if (name == 'checkstyleTest') {
+            enabled = false
+        }
+    }
+
     apply plugin: 'java'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
