@@ -1,8 +1,6 @@
 # Stellar CRM
 
->A microservices-based CRM platform for managing private clinic.
-
-A microservices-based CRM platform for managing customers, inquiries, payments, and inventory.
+A microservices-based CRM platform for managing private clinic.
 
 ## Services
 
