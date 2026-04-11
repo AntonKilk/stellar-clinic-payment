@@ -23,7 +23,11 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Testcontainers
@@ -115,6 +119,20 @@ class CustomerServiceTest {
 
         assertThat(result.getTotalElements()).isEqualTo(totalCustomers);
         assertThat(result.getContent()).hasSize(2);
+    }
+
+    @Test
+    void shouldRejectInvalidEmailFormat() {
+        assertThatThrownBy(() -> customerRepository.saveAndFlush(
+                buildCustomer("Bad Email", "not-an-email", null)))
+                .isInstanceOf(ConstraintViolationException.class);
+    }
+
+    @Test
+    void shouldRejectDuplicateEmail() {
+        assertThatThrownBy(() -> customerRepository.saveAndFlush(
+                buildCustomer("John Doe Twin", "john@example.com", null)))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test

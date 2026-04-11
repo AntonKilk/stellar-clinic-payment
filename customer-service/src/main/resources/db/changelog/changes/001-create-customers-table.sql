@@ -4,7 +4,7 @@
 CREATE TABLE contact_details
 (
     guid                    UUID            PRIMARY KEY,
-    email                   VARCHAR(50)     NOT NULL,
+    email                   VARCHAR(50)     NOT NULL    UNIQUE,
     phone_number            VARCHAR(20),
     created_at              TIMESTAMPTZ     NOT NULL,
     updated_at              TIMESTAMPTZ     NOT NULL

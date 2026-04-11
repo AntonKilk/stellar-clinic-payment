@@ -32,7 +32,7 @@ public class InquiryService {
         inquiry.setSource(InquirySource.valueOf(request.source()));
         inquiry.setComment(request.comment());
         inquiry.setStatus(InquiryStatus.NEW);
-        inquiry.setManagerRefId(UUID.randomUUID()); // ToDo when the logic ready add manager ref id here
+        inquiry.setManagerRefId(UUID.randomUUID()); // 'TODO': 11/04/2026 when the logic ready add manager ref id here
         inquiry.setCreatedAt(Instant.now());
         inquiry.setUpdatedAt(Instant.now());
         Inquiry saved = inquiryRepository.save(inquiry);
