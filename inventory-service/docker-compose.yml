@@ -3,15 +3,15 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_DB: ${INVENTORY_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${INVENTORY_POSTGRES_PORT}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${INVENTORY_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,23 +27,23 @@ services:
     volumes:
       - ../keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     healthcheck:
-      test: [ "CMD-SHELL", "curl -sf http://localhost/9000/health/ready || exit 1"]
+      test: [ "CMD-SHELL", "curl -sf http://localhost:9000/health/ready || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 10
       start_period: 60s
 
-  payment-service:
+  inventory-service:
     build:
       context: ..
-      dockerfile: payment-service/Dockerfile
+      dockerfile: inventory-service/Dockerfile
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${INVENTORY_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/${KC_REALM}
     ports:
-      - "8080:8080"
+      - "8083:8083"
       - "8443:8443"
       - "5005:5005"
     depends_on:
