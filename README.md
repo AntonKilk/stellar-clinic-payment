@@ -1,15 +1,17 @@
 # Stellar CRM
 
+>A microservices-based CRM platform for managing private clinic.
+
 A microservices-based CRM platform for managing customers, inquiries, payments, and inventory.
 
 ## Services
 
-| Service | Description |
-|---|---|
-| [customer-service](./customer-service/README.md) | Stores and manages customer data |
-| [inquiry-service](./inquiry-service/README.md) | Manages customer inquiries and initiates payment flow |
-| [payment-service](./payment-service/README.md) | Processes payments via external provider |
-| [inventory-service](./inventory-service/README.md) | Manages booking slots and group limits |
+| Service | Port | Description |
+|---|---|---|
+| [inquiry-service](./inquiry-service) | 8082 | Entry point — manages customer inquiries and initiates the payment flow |
+| [customer-service](./customer-service) | 8081 | Stores and manages customer data and contact details |
+| [payment-service](./payment-service/README.md) | 8080 | Processes payments via external provider |
+| [inventory-service](./inventory-service) | 8083 | Manages booking slots and group capacity limits |
 
 ## Architecture
 
@@ -20,7 +22,7 @@ A microservices-based CRM platform for managing customers, inquiries, payments, 
                                  │ REST
                         ┌────────▼────────┐
                         │ Customer Service │
-                        └─────────────────┘
+                        └────────┬────────┘
                                  │ Kafka (payments.requests)
                         ┌────────▼────────┐
                         │ Payment Service  │
@@ -31,23 +33,27 @@ A microservices-based CRM platform for managing customers, inquiries, payments, 
                         └─────────────────┘
 ```
 
-Services communicate via REST and Apache Kafka. Each service has its own PostgreSQL database.
+Services communicate via REST and Apache Kafka. Each service owns its own PostgreSQL database (database-per-service pattern).
 
 ## Tech Stack
 
-- Java 17
-- Spring Boot 4.x
-- PostgreSQL
-- Liquibase
-- Apache Kafka
-- Keycloak 26 (OAuth2 / JWT)
-- Docker / Docker Compose
-- Testcontainers
+| Layer | Technology |
+|---|---|
+| Language | Java 17 |
+| Framework | Spring Boot 4.x, Spring Data JPA, Spring Web MVC |
+| Databases | PostgreSQL 17 (one per service) |
+| Migrations | Liquibase |
+| Messaging | Apache Kafka |
+| Auth | Keycloak 26 (OAuth2 / JWT) |
+| Containerization | Docker, Docker Compose |
+| Testing | JUnit 5, Mockito, Testcontainers |
+| Code quality | Checkstyle (Sun Checks), SonarLint |
+| Build | Gradle (multi-module) |
 
 ## Authentication
 
 All REST endpoints are secured via Keycloak JWT tokens.
-Token is passed in the `Authorization: Bearer <token>` header.
+The token is passed in the `Authorization: Bearer <token>` header.
 
 Keycloak realm configuration is stored in `keycloak/realm-export.json` and imported automatically on startup.
 
@@ -62,29 +68,39 @@ Available roles: `ADMIN`, `MANAGER`, `TEACHER`, `INTERN`.
 
 ### Start each service independently
 
-Each service has its own `docker-compose.yml` that starts PostgreSQL and Keycloak:
+Each service has its own `docker-compose.yml` that starts PostgreSQL, Keycloak, and the application itself:
 
 ```bash
-cd payment-service
+cd inquiry-service
 docker-compose up -d
 ```
 
-Then run the service — see the individual service README for environment variable setup.
+For environment variable configuration, see the individual service directory.
+
+### Port reference
+
+| Service | App port | DB port | Keycloak port |
+|---|---|---|---|
+| payment-service | 8080 | 5432 | 8180 |
+| customer-service | 8081 | 5433 | 8180 |
+| inquiry-service | 8082 | 5434 | 8180 |
+| inventory-service | 8083 | 5435 | 8180 |
 
 ## Code Quality
 
-- Checkstyle (Sun Checks)
-- SonarLint
+- **Checkstyle** — Sun Checks enforced at build time and in CI
+- **SonarLint** — IDE-level static analysis
 
 ## CI/CD
 
-GitHub Actions pipeline enforces:
-- PR title format: `^[A-Z][a-zA-Z0-9 \-]+(: ).+$`
-- Build and lint on every push
+GitHub Actions pipelines (`.github/workflows/`):
+
+- **`gradle.yml`** — runs Checkstyle and builds all services on every push to `develop` and `issue-*/**` branches
+- **`pr-title-check.yml`** — enforces PR title format: `ISSUE-<number>: <description>`
 
 ## Git Conventions
 
 - Baseline branch: `develop`
-- Feature branches: `issue-*/*`
-- Commit style: present simple, starting with uppercase
+- Feature branches: `issue-<number>/<short-description>`
+- Commit style: present simple tense, starting with uppercase
 - One PR = one feature
