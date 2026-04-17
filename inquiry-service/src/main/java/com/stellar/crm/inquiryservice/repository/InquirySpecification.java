@@ -15,6 +15,7 @@ public final class InquirySpecification {
         return Specification
                 .where(hasManagerRefId(filter.managerRefId()))
                 .and(hasCustomerRefId(filter.customerRefId()))
+                .and(hasProductRefId(filter.productRefId()))
                 .and(hasStatus(filter.inquiryStatus()));
     }
 
@@ -26,6 +27,11 @@ public final class InquirySpecification {
     private static Specification<Inquiry> hasManagerRefId(final UUID managerRefId) {
         return (root, query, cb) ->
                 managerRefId == null ? null : cb.equal(root.get("managerRefId"), managerRefId);
+    }
+
+    private static Specification<Inquiry> hasProductRefId(final UUID productRefId) {
+        return (root, query, cb) ->
+                productRefId == null ? null : cb.equal(root.get("productRefId"), productRefId);
     }
 
     private static Specification<Inquiry> hasStatus(final InquiryStatus status) {

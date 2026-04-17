@@ -4,7 +4,6 @@ import com.stellar.crm.inquiryservice.dto.InquiryCreateRequest;
 import com.stellar.crm.inquiryservice.dto.InquiryResponse;
 import com.stellar.crm.inquiryservice.dto.InquiryUpdateRequest;
 import com.stellar.crm.inquiryservice.model.Inquiry;
-import com.stellar.crm.inquiryservice.model.InquirySource;
 import com.stellar.crm.inquiryservice.model.InquiryStatus;
 import com.stellar.crm.inquiryservice.repository.InquiryFilter;
 import com.stellar.crm.inquiryservice.repository.InquiryRepository;
@@ -29,7 +28,7 @@ public class InquiryService {
         inquiry.setProductRefId(request.productRefId());
         inquiry.setCustomerRefId(request.customerRefId());
         inquiry.setGroupRefId(request.groupRefId());
-        inquiry.setSource(InquirySource.valueOf(request.source()));
+        inquiry.setSource(request.source());
         inquiry.setComment(request.comment());
         inquiry.setStatus(InquiryStatus.NEW);
         inquiry.setManagerRefId(UUID.randomUUID()); // 'TODO': 11/04/2026 when the logic ready add manager ref id here

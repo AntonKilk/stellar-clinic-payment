@@ -45,7 +45,7 @@ class InquiryServiceTest {
     @Test
     void shouldCreateInquiryWithCorrectFields() {
         final InquiryCreateRequest request = new InquiryCreateRequest(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "CRM", "test comment"
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), InquirySource.CRM, "test comment"
         );
         when(inquiryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -64,7 +64,7 @@ class InquiryServiceTest {
     @Test
     void shouldPersistInquiryOnCreate() {
         final InquiryCreateRequest request = new InquiryCreateRequest(
-                UUID.randomUUID(), UUID.randomUUID(), null, "TELEGRAM", null
+                UUID.randomUUID(), UUID.randomUUID(), null, InquirySource.TELEGRAM, null
         );
         when(inquiryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -76,16 +76,6 @@ class InquiryServiceTest {
         assertThat(captor.getValue().getCreatedAt()).isNotNull();
         assertThat(captor.getValue().getUpdatedAt()).isNotNull();
         assertThat(captor.getValue().getGuid()).isNotNull();
-    }
-
-    @Test
-    void shouldThrowWhenInvalidSourceOnCreate() {
-        final InquiryCreateRequest request = new InquiryCreateRequest(
-                UUID.randomUUID(), UUID.randomUUID(), null, "INVALID_SOURCE", null
-        );
-
-        assertThatThrownBy(() -> inquiryService.createInquiry(request))
-                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -165,7 +155,7 @@ class InquiryServiceTest {
                 .thenReturn(new PageImpl<>(List.of(inquiry)));
 
         final Page<InquiryResponse> result = inquiryService.findAll(
-                new InquiryFilter(null, null, null),
+                new InquiryFilter(null, null, null, null),
                 PageRequest.of(0, PAGE_SIZE)
         );
 
@@ -179,7 +169,7 @@ class InquiryServiceTest {
                 .thenReturn(Page.empty());
 
         final Page<InquiryResponse> result = inquiryService.findAll(
-                new InquiryFilter(InquiryStatus.PAID, UUID.randomUUID(), UUID.randomUUID()),
+                new InquiryFilter(InquiryStatus.PAID, UUID.randomUUID(), UUID.randomUUID(), null),
                 PageRequest.of(0, PAGE_SIZE)
         );
 

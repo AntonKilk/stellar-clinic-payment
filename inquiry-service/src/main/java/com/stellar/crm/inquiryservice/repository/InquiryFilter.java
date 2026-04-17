@@ -7,7 +7,8 @@ import java.util.UUID;
 public record InquiryFilter(
         InquiryStatus inquiryStatus,
         UUID customerRefId,
-        UUID managerRefId
+        UUID managerRefId,
+        UUID productRefId
 ) {
 }
 

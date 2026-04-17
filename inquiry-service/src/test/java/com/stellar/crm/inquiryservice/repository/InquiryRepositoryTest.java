@@ -42,6 +42,7 @@ class InquiryRepositoryTest {
 
     private UUID customerRefId;
     private UUID managerRefId;
+    private UUID productRefId;
     private Inquiry savedInquiry;
 
     @DynamicPropertySource
@@ -56,15 +57,16 @@ class InquiryRepositoryTest {
         inquiryRepository.deleteAll();
         customerRefId = UUID.randomUUID();
         managerRefId = UUID.randomUUID();
+        productRefId = UUID.randomUUID();
         savedInquiry = inquiryRepository.save(
-                buildInquiry(customerRefId, managerRefId, InquiryStatus.NEW)
+                buildInquiry(customerRefId, managerRefId, productRefId, InquiryStatus.NEW)
         );
     }
 
     @Test
     void shouldReturnInquiriesMatchingCustomerRefId() {
         final Page<Inquiry> result = inquiryRepository.findAll(
-                InquirySpecification.byFilter(new InquiryFilter(null, customerRefId, null)),
+                InquirySpecification.byFilter(new InquiryFilter(null, customerRefId, null, null)),
                 PageRequest.of(0, PAGE_SIZE)
         );
 
@@ -74,10 +76,10 @@ class InquiryRepositoryTest {
 
     @Test
     void shouldNotReturnInquiriesWithDifferentCustomerRefId() {
-        inquiryRepository.save(buildInquiry(UUID.randomUUID(), managerRefId, InquiryStatus.NEW));
+        inquiryRepository.save(buildInquiry(UUID.randomUUID(), managerRefId, UUID.randomUUID(), InquiryStatus.NEW));
 
         final Page<Inquiry> result = inquiryRepository.findAll(
-                InquirySpecification.byFilter(new InquiryFilter(null, customerRefId, null)),
+                InquirySpecification.byFilter(new InquiryFilter(null, customerRefId, null, null)),
                 PageRequest.of(0, PAGE_SIZE)
         );
 
@@ -87,10 +89,10 @@ class InquiryRepositoryTest {
 
     @Test
     void shouldReturnAllWhenCustomerRefIdIsNull() {
-        inquiryRepository.save(buildInquiry(UUID.randomUUID(), managerRefId, InquiryStatus.NEW));
+        inquiryRepository.save(buildInquiry(UUID.randomUUID(), managerRefId, UUID.randomUUID(), InquiryStatus.NEW));
 
         final Page<Inquiry> result = inquiryRepository.findAll(
-                InquirySpecification.byFilter(new InquiryFilter(null, null, null)),
+                InquirySpecification.byFilter(new InquiryFilter(null, null, null, null)),
                 PageRequest.of(0, PAGE_SIZE)
         );
 
@@ -100,7 +102,7 @@ class InquiryRepositoryTest {
     @Test
     void shouldReturnInquiriesMatchingManagerRefId() {
         final Page<Inquiry> result = inquiryRepository.findAll(
-                InquirySpecification.byFilter(new InquiryFilter(null, null, managerRefId)),
+                InquirySpecification.byFilter(new InquiryFilter(null, null, managerRefId, null)),
                 PageRequest.of(0, PAGE_SIZE)
         );
 
@@ -110,10 +112,10 @@ class InquiryRepositoryTest {
 
     @Test
     void shouldNotReturnInquiriesWithDifferentManagerRefId() {
-        inquiryRepository.save(buildInquiry(customerRefId, UUID.randomUUID(), InquiryStatus.NEW));
+        inquiryRepository.save(buildInquiry(customerRefId, UUID.randomUUID(), UUID.randomUUID(), InquiryStatus.NEW));
 
         final Page<Inquiry> result = inquiryRepository.findAll(
-                InquirySpecification.byFilter(new InquiryFilter(null, null, managerRefId)),
+                InquirySpecification.byFilter(new InquiryFilter(null, null, managerRefId, null)),
                 PageRequest.of(0, PAGE_SIZE)
         );
 
@@ -123,10 +125,10 @@ class InquiryRepositoryTest {
 
     @Test
     void shouldReturnAllWhenManagerRefIdIsNull() {
-        inquiryRepository.save(buildInquiry(customerRefId, UUID.randomUUID(), InquiryStatus.NEW));
+        inquiryRepository.save(buildInquiry(customerRefId, UUID.randomUUID(), UUID.randomUUID(), InquiryStatus.NEW));
 
         final Page<Inquiry> result = inquiryRepository.findAll(
-                InquirySpecification.byFilter(new InquiryFilter(null, null, null)),
+                InquirySpecification.byFilter(new InquiryFilter(null, null, null, null)),
                 PageRequest.of(0, PAGE_SIZE)
         );
 
@@ -135,10 +137,10 @@ class InquiryRepositoryTest {
 
     @Test
     void shouldReturnInquiriesMatchingStatus() {
-        inquiryRepository.save(buildInquiry(UUID.randomUUID(), UUID.randomUUID(), InquiryStatus.REJECTED));
+        inquiryRepository.save(buildInquiry(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), InquiryStatus.REJECTED));
 
         final Page<Inquiry> result = inquiryRepository.findAll(
-                InquirySpecification.byFilter(new InquiryFilter(InquiryStatus.NEW, null, null)),
+                InquirySpecification.byFilter(new InquiryFilter(InquiryStatus.NEW, null, null, null)),
                 PageRequest.of(0, PAGE_SIZE)
         );
 
@@ -148,10 +150,10 @@ class InquiryRepositoryTest {
 
     @Test
     void shouldReturnAllWhenStatusIsNull() {
-        inquiryRepository.save(buildInquiry(UUID.randomUUID(), UUID.randomUUID(), InquiryStatus.IN_PROGRESS));
+        inquiryRepository.save(buildInquiry(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), InquiryStatus.IN_PROGRESS));
 
         final Page<Inquiry> result = inquiryRepository.findAll(
-                InquirySpecification.byFilter(new InquiryFilter(null, null, null)),
+                InquirySpecification.byFilter(new InquiryFilter(null, null, null, null)),
                 PageRequest.of(0, PAGE_SIZE)
         );
 
@@ -160,10 +162,10 @@ class InquiryRepositoryTest {
 
     @Test
     void shouldFilterByCustomerRefIdAndStatus() {
-        inquiryRepository.save(buildInquiry(customerRefId, UUID.randomUUID(), InquiryStatus.REJECTED));
+        inquiryRepository.save(buildInquiry(customerRefId, UUID.randomUUID(), UUID.randomUUID(), InquiryStatus.REJECTED));
 
         final Page<Inquiry> result = inquiryRepository.findAll(
-                InquirySpecification.byFilter(new InquiryFilter(InquiryStatus.NEW, customerRefId, null)),
+                InquirySpecification.byFilter(new InquiryFilter(InquiryStatus.NEW, customerRefId, null, null)),
                 PageRequest.of(0, PAGE_SIZE)
         );
 
@@ -173,11 +175,11 @@ class InquiryRepositoryTest {
 
     @Test
     void shouldFilterByAllThreeFields() {
-        inquiryRepository.save(buildInquiry(customerRefId, UUID.randomUUID(), InquiryStatus.NEW));
-        inquiryRepository.save(buildInquiry(UUID.randomUUID(), managerRefId, InquiryStatus.NEW));
+        inquiryRepository.save(buildInquiry(customerRefId, UUID.randomUUID(), UUID.randomUUID(), InquiryStatus.NEW));
+        inquiryRepository.save(buildInquiry(UUID.randomUUID(), managerRefId, UUID.randomUUID(), InquiryStatus.NEW));
 
         final Page<Inquiry> result = inquiryRepository.findAll(
-                InquirySpecification.byFilter(new InquiryFilter(InquiryStatus.NEW, customerRefId, managerRefId)),
+                InquirySpecification.byFilter(new InquiryFilter(InquiryStatus.NEW, customerRefId, managerRefId, null)),
                 PageRequest.of(0, PAGE_SIZE)
         );
 
@@ -188,17 +190,58 @@ class InquiryRepositoryTest {
     @Test
     void shouldReturnEmptyWhenNoMatch() {
         final Page<Inquiry> result = inquiryRepository.findAll(
-                InquirySpecification.byFilter(new InquiryFilter(InquiryStatus.PAID, customerRefId, null)),
+                InquirySpecification.byFilter(new InquiryFilter(InquiryStatus.PAID, customerRefId, null, null)),
                 PageRequest.of(0, PAGE_SIZE)
         );
 
         assertThat(result.getContent()).isEmpty();
     }
 
-    private Inquiry buildInquiry(final UUID customer, final UUID manager, final InquiryStatus status) {
+    @Test
+    void shouldReturnInquiriesMatchingProductRefId() {
+        final Page<Inquiry> result = inquiryRepository.findAll(
+                InquirySpecification.byFilter(new InquiryFilter(null, null, null, productRefId)),
+                PageRequest.of(0, PAGE_SIZE)
+        );
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getProductRefId()).isEqualTo(productRefId);
+    }
+
+    @Test
+    void shouldNotReturnInquiriesWithDifferentProductRefId() {
+        inquiryRepository.save(buildInquiry(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), InquiryStatus.NEW));
+
+        final Page<Inquiry> result = inquiryRepository.findAll(
+                InquirySpecification.byFilter(new InquiryFilter(null, null, null, productRefId)),
+                PageRequest.of(0, PAGE_SIZE)
+        );
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getProductRefId()).isEqualTo(productRefId);
+    }
+
+    @Test
+    void shouldReturnAllWhenProductRefIdIsNull() {
+        inquiryRepository.save(buildInquiry(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), InquiryStatus.NEW));
+
+        final Page<Inquiry> result = inquiryRepository.findAll(
+                InquirySpecification.byFilter(new InquiryFilter(null, null, null, null)),
+                PageRequest.of(0, PAGE_SIZE)
+        );
+
+        assertThat(result.getTotalElements()).isEqualTo(2);
+    }
+
+    private Inquiry buildInquiry(
+            final UUID customer,
+            final UUID manager,
+            final UUID product,
+            final InquiryStatus status
+    ) {
         final Inquiry inquiry = new Inquiry();
         inquiry.setGuid(UUID.randomUUID());
-        inquiry.setProductRefId(UUID.randomUUID());
+        inquiry.setProductRefId(product);
         inquiry.setCustomerRefId(customer);
         inquiry.setManagerRefId(manager);
         inquiry.setSource(InquirySource.CRM);
