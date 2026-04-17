@@ -38,7 +38,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorDto> handleNotReadable(
             HttpMessageNotReadableException ex, HttpServletRequest request) {
-        return build(HttpStatus.BAD_REQUEST, "Malformed request body: " + ex.getMostSpecificCause().getMessage(), request);
+        return build(HttpStatus.BAD_REQUEST,
+                "Malformed request body: " + ex.getMostSpecificCause().getMessage(), request);
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -63,7 +64,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDto> handleUnknown(
             Exception ex, HttpServletRequest request) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred while processing the request", request);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Unexpected error occurred while processing the request", request);
     }
 
     private ResponseEntity<ErrorDto> build(HttpStatus status, String message, HttpServletRequest request) {
