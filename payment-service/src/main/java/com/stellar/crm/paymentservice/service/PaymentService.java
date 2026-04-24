@@ -6,8 +6,8 @@ import com.stellar.crm.paymentservice.model.Payment;
 import com.stellar.crm.paymentservice.model.PaymentStatus;
 import com.stellar.crm.paymentservice.repository.PaymentFilter;
 import com.stellar.crm.paymentservice.repository.PaymentRepository;
+import com.stellar.crm.paymentservice.exception.ResourceNotFoundException;
 import com.stellar.crm.paymentservice.repository.PaymentSpecification;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -37,7 +37,7 @@ public class PaymentService {
 
     public PaymentResponse findById(UUID id) {
         final Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Payment not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id " + id, id));
         return toResponse(payment);
     }
 
