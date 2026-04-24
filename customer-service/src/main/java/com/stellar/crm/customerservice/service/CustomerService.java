@@ -1,5 +1,6 @@
 package com.stellar.crm.customerservice.service;
 
+import com.stellar.crm.customerservice.dto.ContactDetailsResponse;
 import com.stellar.crm.customerservice.dto.CustomerCreateRequest;
 import com.stellar.crm.customerservice.dto.CustomerResponse;
 import com.stellar.crm.customerservice.dto.CustomerUpdateRequest;
@@ -25,13 +26,13 @@ public class CustomerService {
         ContactDetails contactDetails = new ContactDetails();
         contactDetails.setGuid(UUID.randomUUID());
         contactDetails.setEmail(request.email());
-        request.phone().ifPresent(contactDetails::setPhone);
+        request.phoneNumber().ifPresent(contactDetails::setPhone);
         contactDetails.setCreatedAt(Instant.now());
         contactDetails.setUpdatedAt(Instant.now());
 
         Customer customer = new Customer();
         customer.setGuid(UUID.randomUUID());
-        customer.setFullName(request.fullName());
+        customer.setFullName(request.name());
         customer.setContactDetails(contactDetails);
         customer.setCreatedAt(Instant.now());
         customer.setUpdatedAt(Instant.now());
@@ -40,8 +41,10 @@ public class CustomerService {
         return toResponse(saved);
     }
 
-    public Page<Customer> findAllCustomers(String searchTerm, Pageable pageable) {
-        return customerRepository.findAll(CustomerSpecification.fullNameContains(searchTerm), pageable);
+    public Page<CustomerResponse> findAllCustomers(String searchTerm, Pageable pageable) {
+        return customerRepository
+                .findAll(CustomerSpecification.fullNameContains(searchTerm), pageable)
+                .map(this::toResponse);
     }
 
     public CustomerResponse findCustomerById(UUID guid) {
@@ -54,11 +57,11 @@ public class CustomerService {
         Customer customer = customerRepository.findById(guid)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found with id " + guid));
 
-        request.fullName().ifPresent(customer::setFullName);
+        request.name().ifPresent(customer::setFullName);
         customer.setUpdatedAt(Instant.now());
 
         ContactDetails contactDetails = customer.getContactDetails();
-        request.phone().ifPresent(contactDetails::setPhone);
+        request.phoneNumber().ifPresent(contactDetails::setPhone);
         request.email().ifPresent(contactDetails::setEmail);
         contactDetails.setUpdatedAt(Instant.now());
 
@@ -68,11 +71,18 @@ public class CustomerService {
     }
 
     private CustomerResponse toResponse(Customer customer) {
+        ContactDetailsResponse contactDetails = new ContactDetailsResponse(
+                customer.getContactDetails().getGuid(),
+                customer.getContactDetails().getEmail(),
+                customer.getContactDetails().getPhone(),
+                customer.getContactDetails().getCreatedAt(),
+                customer.getContactDetails().getUpdatedAt()
+        );
+
         return new CustomerResponse(
                 customer.getGuid(),
                 customer.getFullName(),
-                customer.getContactDetails().getEmail(),
-                customer.getContactDetails().getPhone(),
+                contactDetails,
                 customer.getCreatedAt(),
                 customer.getUpdatedAt()
         );
