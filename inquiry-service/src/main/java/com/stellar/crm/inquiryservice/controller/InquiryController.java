@@ -5,9 +5,9 @@ import com.stellar.crm.inquiryservice.dto.InquiryResponse;
 import com.stellar.crm.inquiryservice.model.InquiryStatus;
 import com.stellar.crm.inquiryservice.repository.InquiryFilter;
 import com.stellar.crm.inquiryservice.service.InquiryService;
-import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -41,7 +41,7 @@ public class InquiryController {
             @RequestParam(required = false) InquiryStatus status,
             @RequestParam(required = false) UUID customerRefId,
             @RequestParam(required = false) UUID productRefId,
-            @Parameter(example = "createdAt,asc") @PageableDefault(size = PAGE_SIZE) Pageable pageable) {
+            @ParameterObject @PageableDefault(size = PAGE_SIZE) Pageable pageable) {
         validateSortFields(pageable);
         final var filter = new InquiryFilter(status, customerRefId, null, productRefId);
         return ResponseEntity.ok(inquiryService.findAll(filter, pageable));

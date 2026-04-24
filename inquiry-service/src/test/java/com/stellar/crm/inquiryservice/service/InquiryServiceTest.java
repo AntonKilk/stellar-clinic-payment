@@ -3,12 +3,12 @@ package com.stellar.crm.inquiryservice.service;
 import com.stellar.crm.inquiryservice.dto.InquiryCreateRequest;
 import com.stellar.crm.inquiryservice.dto.InquiryResponse;
 import com.stellar.crm.inquiryservice.dto.InquiryUpdateRequest;
+import com.stellar.crm.inquiryservice.exception.ResourceNotFoundException;
 import com.stellar.crm.inquiryservice.model.Inquiry;
 import com.stellar.crm.inquiryservice.model.InquirySource;
 import com.stellar.crm.inquiryservice.model.InquiryStatus;
 import com.stellar.crm.inquiryservice.repository.InquiryFilter;
 import com.stellar.crm.inquiryservice.repository.InquiryRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -124,7 +124,8 @@ class InquiryServiceTest {
         when(inquiryRepository.findById(guid)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> inquiryService.updateInquiry(guid, new InquiryUpdateRequest(null, null)))
-                .isInstanceOf(EntityNotFoundException.class);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(guid.toString());
     }
 
     @Test
@@ -144,7 +145,7 @@ class InquiryServiceTest {
         when(inquiryRepository.findById(guid)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> inquiryService.findById(guid))
-                .isInstanceOf(EntityNotFoundException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining(guid.toString());
     }
 
