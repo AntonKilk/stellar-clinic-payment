@@ -4,9 +4,9 @@ import com.stellar.crm.customerservice.dto.CustomerCreateRequest;
 import com.stellar.crm.customerservice.dto.CustomerResponse;
 import com.stellar.crm.customerservice.dto.CustomerUpdateRequest;
 import com.stellar.crm.customerservice.service.CustomerService;
-import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -35,7 +35,7 @@ public class CustomerController {
     @GetMapping
     public ResponseEntity<Page<CustomerResponse>> getAllCustomers(
             @RequestParam(required = false) String fullName,
-            @Parameter @PageableDefault(size = PAGE_SIZE) Pageable pageable
+            @ParameterObject @PageableDefault(size = PAGE_SIZE) Pageable pageable
     ) {
         return ResponseEntity.ok(customerService.findAllCustomers(fullName, pageable));
     }

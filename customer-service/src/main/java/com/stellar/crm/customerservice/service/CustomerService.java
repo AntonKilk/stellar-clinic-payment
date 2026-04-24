@@ -4,11 +4,11 @@ import com.stellar.crm.customerservice.dto.ContactDetailsResponse;
 import com.stellar.crm.customerservice.dto.CustomerCreateRequest;
 import com.stellar.crm.customerservice.dto.CustomerResponse;
 import com.stellar.crm.customerservice.dto.CustomerUpdateRequest;
+import com.stellar.crm.customerservice.exception.ResourceNotFoundException;
 import com.stellar.crm.customerservice.model.ContactDetails;
 import com.stellar.crm.customerservice.model.Customer;
 import com.stellar.crm.customerservice.repository.CustomerRepository;
 import com.stellar.crm.customerservice.repository.CustomerSpecification;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,13 +49,13 @@ public class CustomerService {
 
     public CustomerResponse findCustomerById(UUID guid) {
         final Customer customer = customerRepository.findById(guid)
-                .orElseThrow(() -> new EntityNotFoundException("Customer not found with id " + guid));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id " + guid, guid));
         return toResponse(customer);
     }
 
     public CustomerResponse updateCustomer(UUID guid, CustomerUpdateRequest request) {
         Customer customer = customerRepository.findById(guid)
-                .orElseThrow(() -> new EntityNotFoundException("Customer not found with id " + guid));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id " + guid, guid));
 
         request.name().ifPresent(customer::setFullName);
         customer.setUpdatedAt(Instant.now());
