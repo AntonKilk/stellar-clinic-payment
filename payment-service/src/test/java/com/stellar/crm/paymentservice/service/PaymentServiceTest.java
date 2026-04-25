@@ -1,6 +1,7 @@
 package com.stellar.crm.paymentservice.service;
 
 import com.stellar.crm.paymentservice.dto.PaymentResponse;
+import com.stellar.crm.paymentservice.exception.ResourceNotFoundException;
 import com.stellar.crm.paymentservice.model.Payment;
 import com.stellar.crm.paymentservice.model.PaymentStatus;
 import com.stellar.crm.paymentservice.repository.PaymentFilter;
@@ -58,7 +59,7 @@ public class PaymentServiceTest {
         when(paymentRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> paymentService.findById(id))
-                .isInstanceOf(EntityNotFoundException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining(id.toString());
     }
 
