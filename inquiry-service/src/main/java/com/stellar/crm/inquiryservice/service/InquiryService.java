@@ -3,12 +3,12 @@ package com.stellar.crm.inquiryservice.service;
 import com.stellar.crm.inquiryservice.dto.InquiryCreateRequest;
 import com.stellar.crm.inquiryservice.dto.InquiryResponse;
 import com.stellar.crm.inquiryservice.dto.InquiryUpdateRequest;
+import com.stellar.crm.inquiryservice.exception.ResourceNotFoundException;
 import com.stellar.crm.inquiryservice.model.Inquiry;
 import com.stellar.crm.inquiryservice.model.InquiryStatus;
 import com.stellar.crm.inquiryservice.repository.InquiryFilter;
 import com.stellar.crm.inquiryservice.repository.InquiryRepository;
 import com.stellar.crm.inquiryservice.repository.InquirySpecification;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,7 +39,8 @@ public class InquiryService {
     }
 
     public InquiryResponse updateInquiry(UUID guid, InquiryUpdateRequest request) {
-        Inquiry inquiry = inquiryRepository.findById(guid).orElseThrow(EntityNotFoundException::new);
+        Inquiry inquiry = inquiryRepository.findById(guid)
+                .orElseThrow(() -> new ResourceNotFoundException("Inquiry not found with id " + guid, guid));
         if (request.status() != null) {
             inquiry.setStatus(request.status());
         }
@@ -53,7 +54,7 @@ public class InquiryService {
 
     public InquiryResponse findById(UUID id) {
         Inquiry inquiry = inquiryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Inquiry not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Inquiry not found with id " + id, id));
         return toResponse(inquiry);
     }
 

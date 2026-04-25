@@ -1,4 +1,4 @@
-package com.stellar.crm.inquiryservice.exception;
+package com.stellar.crm.customerservice.exception;
 
 import java.time.Instant;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.stellar.crm.inquiryservice.exception;
+package com.stellar.crm.customerservice.exception;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
