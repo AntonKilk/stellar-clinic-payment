@@ -22,12 +22,13 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USER}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+      KC_HEALTH_ENABLED: "true"
     ports:
       - "${KC_PORT}:8080"
     volumes:
       - ../keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     healthcheck:
-      test: [ "CMD-SHELL", "curl -sf http://localhost:9000/health/ready || exit 1"]
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '200 OK' <&3"]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -42,6 +43,9 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/${KC_REALM}
+      KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:${KAFKA_EXTERNAL_PORT}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8083:8083"
       - "8443:8443"

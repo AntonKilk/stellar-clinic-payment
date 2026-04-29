@@ -1,0 +1,20 @@
+# Default: let Git decide, but normalize text files to LF on commit.
+* text=auto eol=lf
+
+# Shell scripts must always use LF (CRLF breaks shebangs on Linux).
+*.sh        text eol=lf
+gradlew     text eol=lf
+
+# Windows batch files must always use CRLF.
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+gradlew.bat text eol=crlf
+
+# Binary files — never normalize.
+*.jar       binary
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.zip       binary

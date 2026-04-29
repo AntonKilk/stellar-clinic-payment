@@ -57,6 +57,12 @@ public class InquiryController {
         return status(HttpStatus.CREATED).body(inquiryService.createInquiry(request));
     }
 
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Void> cancel(@PathVariable UUID id) {
+        inquiryService.requestCancellation(id);
+        return ResponseEntity.accepted().build();
+    }
+
     private void validateSortFields(Pageable pageable) {
         pageable.getSort().forEach(order -> {
             if (!ALLOWED_SORT_FIELDS.contains(order.getProperty())) {
