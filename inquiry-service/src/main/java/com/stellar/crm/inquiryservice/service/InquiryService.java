@@ -4,6 +4,8 @@ import com.stellar.crm.inquiryservice.dto.InquiryCreateRequest;
 import com.stellar.crm.inquiryservice.dto.InquiryResponse;
 import com.stellar.crm.inquiryservice.dto.InquiryUpdateRequest;
 import com.stellar.crm.inquiryservice.exception.ResourceNotFoundException;
+import com.stellar.crm.inquiryservice.kafka.CancellationRequestProducer;
+import com.stellar.crm.inquiryservice.kafka.dto.CancellationRequest;
 import com.stellar.crm.inquiryservice.model.Inquiry;
 import com.stellar.crm.inquiryservice.model.InquiryStatus;
 import com.stellar.crm.inquiryservice.repository.InquiryFilter;
@@ -12,15 +14,28 @@ import com.stellar.crm.inquiryservice.repository.InquirySpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class InquiryService {
+
+    private static final Set<InquiryStatus> NON_CANCELLABLE = Set.of(
+            InquiryStatus.PAID,
+            InquiryStatus.REJECTED,
+            InquiryStatus.CANCELLED,
+            InquiryStatus.CANCELLATION_FAILED
+    );
+
     private final InquiryRepository inquiryRepository;
+    private final CancellationRequestProducer cancellationRequestProducer;
 
     public InquiryResponse createInquiry(InquiryCreateRequest request) {
         Inquiry inquiry = new Inquiry();
@@ -56,6 +71,31 @@ public class InquiryService {
         Inquiry inquiry = inquiryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Inquiry not found with id " + id, id));
         return toResponse(inquiry);
+    }
+
+    @Transactional
+    public void requestCancellation(UUID id) {
+        Inquiry inquiry = inquiryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Inquiry not found with id " + id, id));
+
+        if (NON_CANCELLABLE.contains(inquiry.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Inquiry " + id + " cannot be cancelled in status " + inquiry.getStatus());
+        }
+
+        if (inquiry.getGroupRefId() == null) {
+            inquiry.setStatus(InquiryStatus.CANCELLED);
+            inquiry.setUpdatedAt(Instant.now());
+            inquiryRepository.save(inquiry);
+            return;
+        }
+
+        cancellationRequestProducer.send(new CancellationRequest(
+                UUID.randomUUID(),
+                inquiry.getGuid(),
+                inquiry.getGroupRefId(),
+                Instant.now()
+        ));
     }
 
     public Page<InquiryResponse> findAll(InquiryFilter filter, Pageable pageable) {

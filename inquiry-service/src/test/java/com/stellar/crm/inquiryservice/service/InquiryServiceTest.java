@@ -4,6 +4,8 @@ import com.stellar.crm.inquiryservice.dto.InquiryCreateRequest;
 import com.stellar.crm.inquiryservice.dto.InquiryResponse;
 import com.stellar.crm.inquiryservice.dto.InquiryUpdateRequest;
 import com.stellar.crm.inquiryservice.exception.ResourceNotFoundException;
+import com.stellar.crm.inquiryservice.kafka.CancellationRequestProducer;
+import com.stellar.crm.inquiryservice.kafka.dto.CancellationRequest;
 import com.stellar.crm.inquiryservice.model.Inquiry;
 import com.stellar.crm.inquiryservice.model.InquirySource;
 import com.stellar.crm.inquiryservice.model.InquiryStatus;
@@ -19,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -28,7 +32,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +44,9 @@ class InquiryServiceTest {
 
     @Mock
     private InquiryRepository inquiryRepository;
+
+    @Mock
+    private CancellationRequestProducer cancellationRequestProducer;
 
     @InjectMocks
     private InquiryService inquiryService;
@@ -175,6 +184,75 @@ class InquiryServiceTest {
         );
 
         assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldThrowWhenInquiryNotFoundOnRequestCancellation() {
+        final UUID guid = UUID.randomUUID();
+        when(inquiryRepository.findById(guid)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> inquiryService.requestCancellation(guid))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(guid.toString());
+        verifyNoInteractions(cancellationRequestProducer);
+    }
+
+    @Test
+    void shouldRejectCancellationWhenInquiryAlreadyPaid() {
+        final Inquiry inquiry = buildInquiry(InquiryStatus.PAID);
+        inquiry.setGroupRefId(UUID.randomUUID());
+        when(inquiryRepository.findById(inquiry.getGuid())).thenReturn(Optional.of(inquiry));
+
+        assertThatThrownBy(() -> inquiryService.requestCancellation(inquiry.getGuid()))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
+                        .isEqualTo(HttpStatus.CONFLICT));
+        verifyNoInteractions(cancellationRequestProducer);
+        verify(inquiryRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldRejectCancellationWhenInquiryAlreadyCancelled() {
+        final Inquiry inquiry = buildInquiry(InquiryStatus.CANCELLED);
+        when(inquiryRepository.findById(inquiry.getGuid())).thenReturn(Optional.of(inquiry));
+
+        assertThatThrownBy(() -> inquiryService.requestCancellation(inquiry.getGuid()))
+                .isInstanceOf(ResponseStatusException.class);
+        verifyNoInteractions(cancellationRequestProducer);
+    }
+
+    @Test
+    void shouldShortCircuitToCancelledWhenGroupRefIdNull() {
+        final Inquiry inquiry = buildInquiry(InquiryStatus.NEW);
+        inquiry.setGroupRefId(null);
+        when(inquiryRepository.findById(inquiry.getGuid())).thenReturn(Optional.of(inquiry));
+        when(inquiryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        inquiryService.requestCancellation(inquiry.getGuid());
+
+        verifyNoInteractions(cancellationRequestProducer);
+        final ArgumentCaptor<Inquiry> captor = ArgumentCaptor.forClass(Inquiry.class);
+        verify(inquiryRepository).save(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(InquiryStatus.CANCELLED);
+    }
+
+    @Test
+    void shouldPublishCancellationRequestWithoutMutatingStatus() {
+        final Inquiry inquiry = buildInquiry(InquiryStatus.IN_PROGRESS);
+        inquiry.setGroupRefId(UUID.randomUUID());
+        when(inquiryRepository.findById(inquiry.getGuid())).thenReturn(Optional.of(inquiry));
+
+        inquiryService.requestCancellation(inquiry.getGuid());
+
+        final ArgumentCaptor<CancellationRequest> captor = ArgumentCaptor.forClass(CancellationRequest.class);
+        verify(cancellationRequestProducer).send(captor.capture());
+        final CancellationRequest sent = captor.getValue();
+        assertThat(sent.inquiryId()).isEqualTo(inquiry.getGuid());
+        assertThat(sent.groupRefId()).isEqualTo(inquiry.getGroupRefId());
+        assertThat(sent.correlationId()).isNotNull();
+        assertThat(sent.requestedAt()).isNotNull();
+        verify(inquiryRepository, never()).save(any());
+        assertThat(inquiry.getStatus()).isEqualTo(InquiryStatus.IN_PROGRESS);
     }
 
     private Inquiry buildInquiry(final InquiryStatus status) {
