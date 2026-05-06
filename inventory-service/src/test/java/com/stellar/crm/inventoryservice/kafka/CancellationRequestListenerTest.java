@@ -36,7 +36,7 @@ class CancellationRequestListenerTest {
 
         listener.onRequest(req);
 
-        verify(groupService).releaseSlot(req.groupRefId());
+        verify(groupService).releaseSlot(req.groupRefId(), req.correlationId());
         final CancellationResponse sent = capture();
         assertThat(sent.status()).isEqualTo(CancellationResponse.Status.SUCCESS);
         assertThat(sent.message()).isNull();
@@ -49,7 +49,7 @@ class CancellationRequestListenerTest {
     void shouldRespondNotFoundWhenGroupMissing() {
         final CancellationRequest req = newRequest();
         doThrow(new EntityNotFoundException("Group not found: " + req.groupRefId()))
-                .when(groupService).releaseSlot(req.groupRefId());
+                .when(groupService).releaseSlot(req.groupRefId(), req.correlationId());
 
         listener.onRequest(req);
 
@@ -62,7 +62,7 @@ class CancellationRequestListenerTest {
     void shouldRespondAlreadyReleasedWhenCountZero() {
         final CancellationRequest req = newRequest();
         doThrow(new IllegalStateException("Count already zero"))
-                .when(groupService).releaseSlot(req.groupRefId());
+                .when(groupService).releaseSlot(req.groupRefId(), req.correlationId());
 
         listener.onRequest(req);
 
@@ -75,7 +75,7 @@ class CancellationRequestListenerTest {
     void shouldRespondErrorOnUnexpectedFailure() {
         final CancellationRequest req = newRequest();
         doThrow(new RuntimeException("boom"))
-                .when(groupService).releaseSlot(req.groupRefId());
+                .when(groupService).releaseSlot(req.groupRefId(), req.correlationId());
 
         listener.onRequest(req);
 

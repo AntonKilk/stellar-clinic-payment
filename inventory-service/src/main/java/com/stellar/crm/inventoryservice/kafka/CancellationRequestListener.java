@@ -23,7 +23,7 @@ public class CancellationRequestListener {
         Status status;
         String message = null;
         try {
-            groupService.releaseSlot(request.groupRefId());
+            groupService.releaseSlot(request.groupRefId(), request.correlationId());
             status = Status.SUCCESS;
         } catch (EntityNotFoundException ex) {
             status = Status.NOT_FOUND;

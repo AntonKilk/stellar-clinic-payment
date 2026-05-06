@@ -3,9 +3,12 @@ package com.stellar.crm.inventoryservice.service;
 import com.stellar.crm.inventoryservice.dto.GroupCreateRequest;
 import com.stellar.crm.inventoryservice.dto.GroupResponse;
 import com.stellar.crm.inventoryservice.model.Group;
+import com.stellar.crm.inventoryservice.model.ProcessedEvent;
 import com.stellar.crm.inventoryservice.repository.GroupRepository;
 import com.stellar.crm.inventoryservice.repository.GroupSpecification;
+import com.stellar.crm.inventoryservice.repository.ProcessedEventRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class GroupService {
     private final GroupRepository groupRepository;
+    private final ProcessedEventRepository processedEventRepository;
 
     public GroupResponse createGroup(GroupCreateRequest request) {
         Group group = new Group();
@@ -43,7 +47,12 @@ public class GroupService {
         return toResponse(group);
     }
 
-    public GroupResponse releaseSlot(UUID groupRefId) {
+    @Transactional
+    public GroupResponse releaseSlot(UUID groupRefId, UUID correlationId) {
+        if (processedEventRepository.existsById(correlationId)) {
+            return toResponse(groupRepository.findByGroupRefId(groupRefId)
+                    .orElseThrow(() -> new EntityNotFoundException("Group not found: " + groupRefId)));
+        }
         Group group = groupRepository.findByGroupRefId(groupRefId)
                 .orElseThrow(() -> new EntityNotFoundException("Group not found: " + groupRefId));
         if (group.getCurrentCount() <= 0) {
@@ -52,6 +61,7 @@ public class GroupService {
         group.setCurrentCount(group.getCurrentCount() - 1);
         group.setUpdatedAt(Instant.now());
         groupRepository.save(group);
+        processedEventRepository.save(new ProcessedEvent(correlationId, Instant.now()));
         return toResponse(group);
     }
 
