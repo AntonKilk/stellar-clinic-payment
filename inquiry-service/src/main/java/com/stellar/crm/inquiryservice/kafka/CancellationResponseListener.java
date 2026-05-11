@@ -25,7 +25,6 @@ public class CancellationResponseListener {
     public void onResponse(CancellationResponse response) {
         Optional<Inquiry> maybe = inquiryRepository.findById(response.inquiryId());
         if (maybe.isEmpty()) {
-            log.warn("Received cancellation response for unknown inquiry {}", response.inquiryId());
             return;
         }
         Inquiry inquiry = maybe.get();
