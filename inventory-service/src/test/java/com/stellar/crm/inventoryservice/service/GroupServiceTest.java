@@ -3,7 +3,9 @@ package com.stellar.crm.inventoryservice.service;
 import com.stellar.crm.inventoryservice.dto.GroupCreateRequest;
 import com.stellar.crm.inventoryservice.dto.GroupResponse;
 import com.stellar.crm.inventoryservice.model.Group;
+import com.stellar.crm.inventoryservice.model.ProcessedEvent;
 import com.stellar.crm.inventoryservice.repository.GroupRepository;
+import com.stellar.crm.inventoryservice.repository.ProcessedEventRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +26,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,6 +45,9 @@ class GroupServiceTest {
 
     @Mock
     private GroupRepository groupRepository;
+
+    @Mock
+    private ProcessedEventRepository processedEventRepository;
 
     @InjectMocks
     private GroupService groupService;
@@ -111,7 +117,7 @@ class GroupServiceTest {
         when(groupRepository.findByGroupRefId(group.getGroupRefId())).thenReturn(Optional.of(group));
         when(groupRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        final GroupResponse response = groupService.releaseSlot(group.getGroupRefId());
+        final GroupResponse response = groupService.releaseSlot(group.getGroupRefId(), UUID.randomUUID());
 
         assertThat(response.currentCount()).isEqualTo(PARTIAL_COUNT_AFTER_RELEASE);
     }
@@ -121,7 +127,7 @@ class GroupServiceTest {
         final UUID refId = UUID.randomUUID();
         when(groupRepository.findByGroupRefId(refId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> groupService.releaseSlot(refId))
+        assertThatThrownBy(() -> groupService.releaseSlot(refId, null))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining(refId.toString());
     }
@@ -131,9 +137,38 @@ class GroupServiceTest {
         final Group group = buildGroup(UUID.randomUUID(), 0, GROUP_LIMIT);
         when(groupRepository.findByGroupRefId(group.getGroupRefId())).thenReturn(Optional.of(group));
 
-        assertThatThrownBy(() -> groupService.releaseSlot(group.getGroupRefId()))
+        assertThatThrownBy(() -> groupService.releaseSlot(group.getGroupRefId(), UUID.randomUUID()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Count already zero");
+    }
+
+    @Test
+    void shouldNotDecrementWhenAlreadyProcessed() {
+        final UUID correlationId = UUID.randomUUID();
+        final Group group = buildGroup(UUID.randomUUID(), PARTIAL_COUNT, GROUP_LIMIT);
+        when(processedEventRepository.existsById(correlationId)).thenReturn(true);
+        when(groupRepository.findByGroupRefId(group.getGroupRefId())).thenReturn(Optional.of(group));
+
+        final GroupResponse response = groupService.releaseSlot(group.getGroupRefId(), correlationId);
+
+        assertThat(response.currentCount()).isEqualTo(PARTIAL_COUNT);
+        verify(groupRepository, never()).save(any());
+        verify(processedEventRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldSaveProcessedEventOnSuccessfulRelease() {
+        final UUID correlationId = UUID.randomUUID();
+        final Group group = buildGroup(UUID.randomUUID(), PARTIAL_COUNT, GROUP_LIMIT);
+        when(groupRepository.findByGroupRefId(group.getGroupRefId())).thenReturn(Optional.of(group));
+        when(groupRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        groupService.releaseSlot(group.getGroupRefId(), correlationId);
+
+        final ArgumentCaptor<ProcessedEvent> captor = ArgumentCaptor.forClass(ProcessedEvent.class);
+        verify(processedEventRepository).save(captor.capture());
+        assertThat(captor.getValue().getCorrelationId()).isEqualTo(correlationId);
+        assertThat(captor.getValue().getProcessedAt()).isNotNull();
     }
 
     @Test
