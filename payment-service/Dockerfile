@@ -3,11 +3,14 @@ FROM eclipse-temurin:17-jdk-alpine AS builder
 
 WORKDIR /workspace
 
-COPY payment-service/gradlew .
-COPY payment-service/gradle/ gradle/
-COPY payment-service/build.gradle .
-COPY payment-service/settings.gradle .
-COPY payment-service/src/ src/
+COPY contracts/ contracts/
+
+COPY payment-service/gradlew payment-service/
+COPY payment-service/gradle/ payment-service/gradle/
+COPY payment-service/build.gradle payment-service/settings.gradle payment-service/
+COPY payment-service/src/ payment-service/src/
+
+WORKDIR /workspace/payment-service
 
 RUN chmod +x gradlew \
     && ./gradlew bootJar --no-daemon -q
@@ -19,7 +22,7 @@ WORKDIR /app
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-COPY --from=builder /workspace/build/libs/*.jar app.jar
+COPY --from=builder /workspace/payment-service/build/libs/*.jar app.jar
 
 USER appuser
 

@@ -3,11 +3,14 @@ FROM eclipse-temurin:17-jdk-alpine AS builder
 
 WORKDIR /workspace
 
-COPY inquiry-service/gradlew .
-COPY inquiry-service/gradle/ gradle/
-COPY inquiry-service/build.gradle .
-COPY inquiry-service/settings.gradle .
-COPY inquiry-service/src/ src/
+COPY contracts/ contracts/
+
+COPY inquiry-service/gradlew inquiry-service/
+COPY inquiry-service/gradle/ inquiry-service/gradle/
+COPY inquiry-service/build.gradle inquiry-service/settings.gradle inquiry-service/
+COPY inquiry-service/src/ inquiry-service/src/
+
+WORKDIR /workspace/inquiry-service
 
 RUN chmod +x gradlew \
     && ./gradlew bootJar --no-daemon -q
@@ -19,7 +22,7 @@ WORKDIR /app
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-COPY --from=builder /workspace/build/libs/*.jar app.jar
+COPY --from=builder /workspace/inquiry-service/build/libs/*.jar app.jar
 
 USER appuser
 
