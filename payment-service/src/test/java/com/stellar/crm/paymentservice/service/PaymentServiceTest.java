@@ -2,8 +2,8 @@ package com.stellar.crm.paymentservice.service;
 
 import com.stellar.crm.paymentservice.dto.PaymentResponse;
 import com.stellar.crm.paymentservice.exception.ResourceNotFoundException;
+import com.stellar.crm.contracts.payment.PaymentStatus;
 import com.stellar.crm.paymentservice.model.Payment;
-import com.stellar.crm.paymentservice.model.PaymentStatus;
 import com.stellar.crm.paymentservice.repository.PaymentFilter;
 import com.stellar.crm.paymentservice.repository.PaymentRepository;
 import jakarta.persistence.EntityNotFoundException;

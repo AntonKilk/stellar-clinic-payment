@@ -1,7 +1,7 @@
 package com.stellar.crm.inquiryservice.kafka;
 
+import com.stellar.crm.contracts.payment.PaymentStatus;
 import com.stellar.crm.inquiryservice.kafka.dto.PaymentStatusUpdated;
-import com.stellar.crm.inquiryservice.kafka.dto.PaymentStatusUpdated.PaymentStatus;
 import com.stellar.crm.inquiryservice.model.Inquiry;
 import com.stellar.crm.inquiryservice.model.InquiryStatus;
 import com.stellar.crm.inquiryservice.repository.InquiryRepository;

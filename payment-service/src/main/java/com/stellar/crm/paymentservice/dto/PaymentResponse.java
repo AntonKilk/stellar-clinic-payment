@@ -1,6 +1,6 @@
 package com.stellar.crm.paymentservice.dto;
 
-import com.stellar.crm.paymentservice.model.PaymentStatus;
+import com.stellar.crm.contracts.payment.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;

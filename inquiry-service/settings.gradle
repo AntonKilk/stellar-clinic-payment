@@ -1,1 +1,4 @@
 rootProject.name = 'inquiry-service'
+
+include ':contracts'
+project(':contracts').projectDir = file('../contracts')

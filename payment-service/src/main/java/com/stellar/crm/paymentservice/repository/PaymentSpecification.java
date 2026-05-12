@@ -1,7 +1,7 @@
 package com.stellar.crm.paymentservice.repository;
 
+import com.stellar.crm.contracts.payment.PaymentStatus;
 import com.stellar.crm.paymentservice.model.Payment;
-import com.stellar.crm.paymentservice.model.PaymentStatus;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.Instant;
