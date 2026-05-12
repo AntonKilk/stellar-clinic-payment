@@ -1,5 +1,6 @@
 package com.stellar.crm.paymentservice.model;
 
+import com.stellar.crm.contracts.payment.PaymentStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

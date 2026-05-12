@@ -1,8 +1,8 @@
 package com.stellar.crm.paymentservice.kafka;
 
 import com.stellar.crm.paymentservice.kafka.dto.PaymentStatusUpdated;
+import com.stellar.crm.contracts.payment.PaymentStatus;
 import com.stellar.crm.paymentservice.model.Payment;
-import com.stellar.crm.paymentservice.model.PaymentStatus;
 import com.stellar.crm.paymentservice.repository.PaymentRepository;
 import com.stellar.crm.paymentservice.service.PaymentService;
 import org.apache.kafka.clients.consumer.Consumer;

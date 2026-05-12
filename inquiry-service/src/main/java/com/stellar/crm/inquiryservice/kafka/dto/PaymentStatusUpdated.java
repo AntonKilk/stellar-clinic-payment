@@ -1,4 +1,4 @@
-package com.stellar.crm.paymentservice.kafka.dto;
+package com.stellar.crm.inquiryservice.kafka.dto;
 
 import com.stellar.crm.contracts.payment.PaymentStatus;
 

@@ -1,4 +1,4 @@
-package com.stellar.crm.paymentservice.model;
+package com.stellar.crm.contracts.payment;
 
 public enum PaymentStatus {
     RECEIVED,

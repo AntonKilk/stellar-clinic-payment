@@ -1,5 +1,5 @@
 package com.stellar.crm.paymentservice.repository;
-import com.stellar.crm.paymentservice.model.PaymentStatus;
+import com.stellar.crm.contracts.payment.PaymentStatus;
 
 import java.time.Instant;
 import java.util.UUID;

@@ -1,5 +1,6 @@
 rootProject.name = 'stellar'
 
+include 'contracts'
 include 'payment-service'
 include 'inventory-service'
 include 'inquiry-service'
